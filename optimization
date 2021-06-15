@@ -81,7 +81,7 @@ end = '2020-12-31'
 data = getStockQuotes(stocks, source, start, end)
 
 #Calculate returns
-riskFreeRate = 0.00151
+riskFreeRate = 0.0021
 numPeriodsAnnually = 252.0
 rets = (data - data.shift(1))/data.shift(1)
 
