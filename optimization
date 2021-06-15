@@ -1,3 +1,4 @@
+#tuto's link: 'http://www.bradfordlynch.com/blog/2015/12/04/InvestmentPortfolioOptimization.html'
 #import modules required
 import pandas_datareader as web
 import pandas as pd
@@ -5,8 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as sco
 
-
-#Creation of functions needed later
 def getStockQuotes(symbols, source, startDate, endDate):
     quotes = pd.DataFrame()
     
@@ -15,24 +14,20 @@ def getStockQuotes(symbols, source, startDate, endDate):
         
     return quotes
 
-
 def calcPortfolioPerf(weights, meanReturns, covMatrix):
   #Calculate return and variance
   portReturn = np.sum( meanReturns*weights )
   portStdDev = np.sqrt(np.dot(weights.T, np.dot(covMatrix, weights)))
     
   return portReturn, portStdDev
-  
 
 def negSharpeRatio(weights, meanReturns, covMatrix, riskFreeRate):
   p_ret, p_var = calcPortfolioPerf(weights, meanReturns, covMatrix)
 
   return -(p_ret - riskFreeRate) / p_var
 
-
 def getPortfolioVol(weights,meanReturns,covMatrix):
   return calcPortfolioPerf(weights, meanReturns, covMatrix)[1]
-
 
 def findMaxSharpeRatioPortfolio(meanReturns,covMatrix,riskFreeRate):
   numAssets = len(meanReturns)
@@ -44,7 +39,6 @@ def findMaxSharpeRatioPortfolio(meanReturns,covMatrix,riskFreeRate):
 
   return opts
 
-
 def findMinVariancePortfolio(meanReturns,covMatrix):
   numAssets = len(meanReturns)
   args = (meanReturns, covMatrix)
@@ -54,7 +48,6 @@ def findMinVariancePortfolio(meanReturns,covMatrix):
   opts = sco.minimize(getPortfolioVol, numAssets*[1./numAssets,], args=args, method='SLSQP', bounds=bounds, constraints=constraints)
     
   return opts
-
 
 def findEfficientReturn(meanReturns,covMatrix,targetReturn):
   numAssets = len(meanReturns)
@@ -69,7 +62,6 @@ def findEfficientReturn(meanReturns,covMatrix,targetReturn):
     
   return sco.minimize(getPortfolioVol, numAssets*[1./numAssets,], args=args, method='SLSQP', bounds=bounds, constraints=constraints)
 
-
 def findEfficientFrontier(meanReturns, covMatrix, rangeOfReturns):
     efficientPortfolios = []
     for ret in rangeOfReturns:
@@ -77,37 +69,29 @@ def findEfficientFrontier(meanReturns, covMatrix, rangeOfReturns):
         
     return efficientPortfolios
 
-
-#Inputs of the stocks in our portfolio
-availStocks = ['AAPL', 'AMZN', 'MSFT', 'NFLX', 'V', 'TM', 'KO', 'PEP', 'JPM']
+#Stocks inputs
+availStocks = ['AAPL', 'NKE', 'MSFT', 'V', 'TM', 'KO', 'PEP', 'JPM', 'CAT']
 stocks = availStocks
 numAssets = len(stocks)
 source = 'yahoo'
 start = '2015-01-01'
 end = '2020-12-31'
 
-
 #Retrieve data from online
 data = getStockQuotes(stocks, source, start, end)
 
-
 #Calculate returns
 riskFreeRate = 0.0021
-dur = 20
-numPeriodsAnnually = 252.0/dur
-windowedData = data[::dur]
-rets = np.log(windowedData/windowedData.shift(1))
-
+numPeriodsAnnually = 252.0
+rets = (data - data.shift(1))/data.shift(1)
 
 #Calculate stock mean-variance
 meanDailyReturn = rets.mean()
 covariance = rets.cov()
 
-
 #Run MonteCarlo simulation of numPortfolios portfolios
 numPortfolios = 100000
 results = np.zeros((3,numPortfolios))
-
 
 #Calculate portfolios
 for i in range(numPortfolios):
@@ -123,18 +107,15 @@ for i in range(numPortfolios):
     results[1,i] = pvar*np.sqrt(numPeriodsAnnually)
     results[2,i] = (results[0,i] - riskFreeRate)/results[1,i]
 
-
 #Plot results of MC on portfolio weights
 # x = pret, y = pvar, 
 plt.scatter(results[1,:], results[0,:], c=results[2,:], marker='o')
 
-
 #Find efficient frontier, annual target returns of 9% and 16% are converted to
 #match period of mean returns calculated previously
-targetReturns = np.linspace(0.09, 0.35, 50)/(252./dur)
+targetReturns = np.linspace(0.09, 0.45, 50)/(252)
 efficientPortfolios = findEfficientFrontier(meanDailyReturn, covariance, targetReturns)
 plt.plot([p['fun']*np.sqrt(numPeriodsAnnually) for p in efficientPortfolios], targetReturns*numPeriodsAnnually, 'b--', linewidth=2)
-
 
 #Find portfolio with maximum Sharpe ratio
 maxSharpe = findMaxSharpeRatioPortfolio(meanDailyReturn, covariance, riskFreeRate)
@@ -142,16 +123,14 @@ rp, sdp = calcPortfolioPerf(maxSharpe['x'], meanDailyReturn, covariance)
 plt.plot(sdp*np.sqrt(numPeriodsAnnually), rp*numPeriodsAnnually, 'r*', markersize=15.0)
 print (rp)
 
-
 #Find portfolio with minimum variance
 minVar = findMinVariancePortfolio(meanDailyReturn, covariance)
 rp, sdp = calcPortfolioPerf(minVar['x'], meanDailyReturn, covariance)
 plt.plot(sdp*np.sqrt(numPeriodsAnnually), rp*numPeriodsAnnually, 'y*', markersize=15.0)
 
-
-#Graph Monte Carlo simul
+#Graph creation
+#MonteCarlo Simul
 plt.scatter(results[1,:], results[0,:], c=results[2,:], marker='o')
-
 #EfficientFrontier
 plt.plot([p['fun']*np.sqrt(numPeriodsAnnually) for p in efficientPortfolios], targetReturns*numPeriodsAnnually, 'b--', linewidth=2)
 
@@ -174,8 +153,6 @@ plt.title('Portfolios of Many Assets')
 plt.tight_layout()
 plt.savefig('Monte Carlo Simulation for Portfolio', dpi=100)
 
-
-#Graph allocation for each portfolio
 plt.figure(figsize=(8,6))
 ind = np.arange(numAssets)
 width = 0.35
@@ -192,13 +169,13 @@ ax.legend((rects1[0], rects2[0]), ('Max Sharpe Ratio', 'Minimum Volatility'))
 plt.savefig('Portfolio Compositions', dpi=100)
 plt.show()
 
-
 #Create a table to get weights of the maxSharpe and minVar ptfs
+
 #round results of maxSharpe and minVar optimization
 roundedMaxSharpe = np.round(maxSharpe['x'], decimals=3)*100
 roundedMinVar = np.round(minVar['x'], decimals=3)*100
 
-#Building a dataframe to show the allocation
+#building a dataframe to show the allocation
 df = pd.DataFrame({'Stocks' : stocks,
                    'Weights for maxSharpe' : roundedMaxSharpe,
                    'Weights for minVar' : roundedMinVar})
