@@ -85,9 +85,6 @@ riskFreeRate = 0.0021
 numPeriodsAnnually = 252.0
 rets = (data - data.shift(1))/data.shift(1)
 
-returns = (data - data.shift(1))/data.shift(1)
-meanReturnsTestv1 = returns.mean()
-
 #Calculate stock mean-variance
 meanDailyReturn = rets.mean()
 covariance = rets.cov()
