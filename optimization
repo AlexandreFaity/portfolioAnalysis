@@ -1,4 +1,4 @@
-#tuto's link: 'http://www.bradfordlynch.com/blog/2015/12/04/InvestmentPortfolioOptimization.html'
+#tuto link: 'http://www.bradfordlynch.com/blog/2015/12/04/InvestmentPortfolioOptimization.html'
 #import modules required
 import pandas_datareader as web
 import pandas as pd
